@@ -1,0 +1,56 @@
+{
+  "name": "CGP Companion",
+
+  "platformVersion": "0.1.0-alpha",
+
+  "companion": {
+    "currentVersion": "0.1.0-alpha",
+
+    "minimumSupportedVersion": "0.1.0-alpha",
+
+    "updatePolicy": {
+      "forceUpdate": false,
+      "message": null
+    }
+  },
+
+  "api": {
+    "version": "v1",
+
+    "basePath": "/cgp/api",
+
+    "requiredEndpoints": [
+      "/auth/me",
+      "/companion/me",
+      "/companion/config",
+      "/membership/access/:productId",
+      "/accounts/me"
+    ]
+  },
+
+  "products": [
+    {
+      "id": "rainbow-six-cuba",
+
+      "status": "active",
+
+      "modules": [
+        "identity",
+        "statistics",
+        "profile"
+      ],
+
+      "requiredProviders": [
+        "ubisoft"
+      ]
+    }
+  ],
+
+  "rules": {
+    "clientOwnsLogic": false,
+
+    "permissionsResolvedBy": "CGP",
+
+    "productsAreModules": true
+  }
+}

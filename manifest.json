@@ -1,0 +1,22 @@
+{
+  "platform": "CGP",
+  "version": "0.1.0-alpha",
+  "status": "operational-alpha",
+  "currentMilestone": "M-023",
+  "products": [
+    "RainbowSixCuba"
+  ],
+  "services": [
+    "CGP-API",
+    "RainbowSixCubaBot",
+    "RainbowSixCubaStats"
+  ],
+  "principles": [
+    "Applications do not own business logic",
+    "One Engine, One Responsibility",
+    "One Object, One Owner",
+    "Historical data is immutable",
+    "Game agnostic core",
+    "Products consume platform capabilities"
+  ]
+}

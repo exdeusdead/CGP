@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+
+  <style>
+    body {
+      width: 300px;
+      font-family: Arial, sans-serif;
+      padding: 12px;
+    }
+
+    h3 {
+      margin-top: 0;
+    }
+
+    .section {
+      margin-bottom: 12px;
+    }
+
+    .label {
+      font-weight: bold;
+      font-size: 12px;
+    }
+
+    .value {
+      font-size: 13px;
+      margin-top: 3px;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 8px;
+      padding: 8px;
+    }
+
+    #status {
+      margin-top: 10px;
+      font-size: 12px;
+    }
+  </style>
+
+</head>
+
+<body>
+
+<h3>CGP Companion</h3>
+
+<div class="section">
+  <div class="label">Product</div>
+  <div class="value" id="product">
+    Rainbow Six CUBA
+  </div>
+</div>
+
+
+<div class="section">
+  <div class="label">Provider</div>
+  <div class="value" id="provider">
+    Ubisoft Connect
+  </div>
+</div>
+
+
+<div class="section">
+  <div class="label">Session</div>
+  <div class="value" id="session">
+    CGP Managed
+  </div>
+</div>
+
+
+<button id="syncCurrent">
+  Sync Current Page
+</button>
+
+
+<button id="syncAll">
+  Sync Full Profile
+</button>
+
+
+<div id="status">
+  Ready
+</div>
+
+
+<script src="popup.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Environment / secrets
+.env
+.env.*
+*.key
+*.pem
+
+# Runtime / generated data
+platform/data/auth/tokens/
+platform/data/identity/users/
+platform/data/identity/linkedAccounts/
+platform/data/membership/
+platform/data/storage/
+platform/data/statistics/profiles/
+platform/data/statistics/indexes/
+
+# Backups / audits runtime
+backups/
+audits/runtime/
+
+# Logs
+*.log
+logs/
+.pm2/

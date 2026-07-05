@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+
+  "name": "CGP Companion",
+
+  "version": "0.2.0",
+
+  "description": "CGP browser companion for identity linking, product modules, and supported game integrations.",
+
+  "permissions": [
+    "activeTab",
+    "tabs",
+    "storage"
+  ],
+
+  "host_permissions": [
+    "https://api.rainbowsixcuba.com/*",
+    "https://r6.tracker.network/*"
+  ],
+
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "CGP Companion"
+  },
+
+  "content_scripts": [
+    {
+      "matches": [
+        "https://r6.tracker.network/*"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ]
+}

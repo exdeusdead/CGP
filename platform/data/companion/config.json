@@ -1,0 +1,19 @@
+{
+  "name": "CGP Companion",
+  "version": "0.1.0-alpha",
+  "status": "active",
+  "products": [
+    {
+      "id": "rainbow-six-cuba",
+      "enabled": true,
+      "features": [
+        "identity-link",
+        "stats-sync",
+        "profile-sync"
+      ],
+      "providers": [
+        "ubisoft"
+      ]
+    }
+  ]
+}
