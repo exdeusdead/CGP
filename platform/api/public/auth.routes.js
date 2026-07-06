@@ -77,10 +77,16 @@ router.get("/discord/login", (req, res) => {
     state
   });
 
-  res.json({
-    provider: "discord",
-    url: `https://discord.com/oauth2/authorize?${params.toString()}`
-  });
+  const url = `https://discord.com/oauth2/authorize?${params.toString()}`;
+
+  if (req.query.mode === "json") {
+    return res.json({
+      provider: "discord",
+      url
+    });
+  }
+
+  return res.redirect(url);
 });
 
 
@@ -195,6 +201,16 @@ router.get("/discord/callback", async (req, res) => {
 
     if (returnUrl) {
       const redirectUrl = new URL(returnUrl);
+
+      const allowedReturn =
+        redirectUrl.origin === "https://rainbowsixcuba.com" ||
+        redirectUrl.hostname.endsWith(".chromiumapp.org");
+
+      if (!allowedReturn) {
+        return res.status(400).json({
+          error: "INVALID_RETURN_URL"
+        });
+      }
 
       redirectUrl.searchParams.set("token", session.token);
       redirectUrl.searchParams.set("userId", user.id);
