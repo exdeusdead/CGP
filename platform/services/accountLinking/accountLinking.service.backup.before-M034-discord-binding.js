@@ -98,30 +98,3 @@ module.exports = {
   getLinkedAccount,
   listLinkedAccounts
 };
-
-
-function findLinkedAccount(providerId, providerAccountId) {
-  if (!providerId) return null;
-  if (!providerAccountId) return null;
-
-  if (!fs.existsSync(LINKED_ACCOUNTS_DIR)) {
-    return null;
-  }
-
-  const userIds = fs.readdirSync(LINKED_ACCOUNTS_DIR);
-
-  for (const userId of userIds) {
-    const account = getLinkedAccount(userId, providerId);
-
-    if (
-      account &&
-      String(account.providerAccountId) === String(providerAccountId)
-    ) {
-      return account;
-    }
-  }
-
-  return null;
-}
-
-module.exports.findLinkedAccount = findLinkedAccount;

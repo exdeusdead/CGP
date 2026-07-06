@@ -1,4 +1,3 @@
-const crypto = require("crypto");
 const express = require("express");
 const authService = require("../../services/auth/auth.service");
 const identityService = require("../../services/identity/identity.service");
@@ -65,16 +64,11 @@ router.get("/discord/login", (req, res) => {
     });
   }
 
-  const state = Buffer.from(JSON.stringify({
-    returnUrl: req.query.returnUrl || null
-  })).toString("base64url");
-
   const params = new URLSearchParams({
     client_id: config.clientId,
     redirect_uri: config.redirectUri,
     response_type: "code",
-    scope: config.scopes.join(" "),
-    state
+    scope: config.scopes.join(" ")
   });
 
   res.json({
@@ -141,71 +135,14 @@ router.get("/discord/callback", async (req, res) => {
       });
     }
 
-    let linked = accountLinking.findLinkedAccount(
-      "discord",
-      discordUser.id
-    );
-
-    let user;
-
-    if (linked) {
-      user = identityService.getUser(linked.userId);
-    }
-
-    if (!user) {
-      const userId =
-        "user-" +
-        (discordUser.username || crypto.randomUUID())
-          .toLowerCase()
-          .replace(/[^a-z0-9]/g, "-");
-
-      user = identityService.createUser({
-        id: userId,
-        discord: {
-          id: discordUser.id,
-          username: discordUser.username
-        }
-      });
-
-      accountLinking.linkAccount(user.id, "discord", {
-        providerAccountId: discordUser.id,
-        username: discordUser.username,
-        displayName: discordUser.global_name
-      });
-    }
-
-    const session = authService.createToken(
-      user.id,
-      ["user"]
-    );
-
-    let returnUrl = null;
-
-    if (req.query.state) {
-      try {
-        const state = JSON.parse(
-          Buffer.from(String(req.query.state), "base64url").toString("utf8")
-        );
-
-        returnUrl = state.returnUrl || null;
-      } catch (error) {
-        returnUrl = null;
-      }
-    }
-
-    if (returnUrl) {
-      const redirectUrl = new URL(returnUrl);
-
-      redirectUrl.searchParams.set("token", session.token);
-      redirectUrl.searchParams.set("userId", user.id);
-
-      return res.redirect(redirectUrl.toString());
-    }
-
     res.json({
       provider: "discord",
-      user,
-      token: session.token
+      discordUser,
+      tokenData: {
+        token_type: tokenData.token_type,
+        expires_in: tokenData.expires_in,
+        scope: tokenData.scope
+      }
     });
   } catch (error) {
     res.status(500).json({

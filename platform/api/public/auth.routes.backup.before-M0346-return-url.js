@@ -65,16 +65,11 @@ router.get("/discord/login", (req, res) => {
     });
   }
 
-  const state = Buffer.from(JSON.stringify({
-    returnUrl: req.query.returnUrl || null
-  })).toString("base64url");
-
   const params = new URLSearchParams({
     client_id: config.clientId,
     redirect_uri: config.redirectUri,
     response_type: "code",
-    scope: config.scopes.join(" "),
-    state
+    scope: config.scopes.join(" ")
   });
 
   res.json({
@@ -178,29 +173,6 @@ router.get("/discord/callback", async (req, res) => {
       user.id,
       ["user"]
     );
-
-    let returnUrl = null;
-
-    if (req.query.state) {
-      try {
-        const state = JSON.parse(
-          Buffer.from(String(req.query.state), "base64url").toString("utf8")
-        );
-
-        returnUrl = state.returnUrl || null;
-      } catch (error) {
-        returnUrl = null;
-      }
-    }
-
-    if (returnUrl) {
-      const redirectUrl = new URL(returnUrl);
-
-      redirectUrl.searchParams.set("token", session.token);
-      redirectUrl.searchParams.set("userId", user.id);
-
-      return res.redirect(redirectUrl.toString());
-    }
 
     res.json({
       provider: "discord",

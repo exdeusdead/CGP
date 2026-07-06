@@ -179,29 +179,6 @@ router.get("/discord/callback", async (req, res) => {
       ["user"]
     );
 
-    let returnUrl = null;
-
-    if (req.query.state) {
-      try {
-        const state = JSON.parse(
-          Buffer.from(String(req.query.state), "base64url").toString("utf8")
-        );
-
-        returnUrl = state.returnUrl || null;
-      } catch (error) {
-        returnUrl = null;
-      }
-    }
-
-    if (returnUrl) {
-      const redirectUrl = new URL(returnUrl);
-
-      redirectUrl.searchParams.set("token", session.token);
-      redirectUrl.searchParams.set("userId", user.id);
-
-      return res.redirect(redirectUrl.toString());
-    }
-
     res.json({
       provider: "discord",
       user,
