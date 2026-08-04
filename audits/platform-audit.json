@@ -1,0 +1,97 @@
+{
+  "generatedAt": "2026-07-30T15:38:10.626Z",
+  "platform": {
+    "node": "v22.22.1",
+    "os": "linux",
+    "release": "7.0.0-22-generic",
+    "root": "/home/adrian/CGP"
+  },
+  "engines": [
+    {
+      "name": "Storage Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Logger Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Config Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Runtime Engine",
+      "version": "0.2.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Dashboard Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Render Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Asset Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Task Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Backup Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Distribution Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Identity Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Statistics Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "MediaOS",
+      "version": "1.0.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Competition Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Website Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    },
+    {
+      "name": "Scheduler Engine",
+      "version": "0.1.0-alpha",
+      "status": "created"
+    }
+  ],
+  "statistics": {
+    "registeredEngines": 16,
+    "javascript": 72,
+    "json": 40,
+    "files": 145
+  }
+}

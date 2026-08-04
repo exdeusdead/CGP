@@ -1,0 +1,53 @@
+{
+  "generatedAt": "2026-07-30T15:09:34.308Z",
+  "workspace": "/home/adrian/CGP",
+  "platform": {
+    "os": "linux",
+    "release": "7.0.0-22-generic",
+    "node": "v22.22.1"
+  },
+  "git": {
+    "branch": "main",
+    "commit": "74d7ad1",
+    "remote": "git@github.com:exdeusdead/CGP.git"
+  },
+  "platformFolders": [
+    "api",
+    "config",
+    "core",
+    "data",
+    "engines",
+    "products",
+    "providers",
+    "services",
+    "shared"
+  ],
+  "platformEngines": [
+    "statistics"
+  ],
+  "platformServices": [
+    "accountLinking",
+    "auth",
+    "collector",
+    "companion",
+    "identity",
+    "membership",
+    "operations",
+    "permissions",
+    "providers",
+    "statistics"
+  ],
+  "platformProviders": [
+    "contracts",
+    "r6tracker"
+  ],
+  "platformProducts": [],
+  "rootApps": [],
+  "rootProducts": [
+    "RainbowSixCuba"
+  ],
+  "shared": [],
+  "tools": [
+    "bootstrap"
+  ]
+}

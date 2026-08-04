@@ -204,7 +204,6 @@ router.get("/discord/callback", async (req, res) => {
 
       const allowedReturn =
         redirectUrl.origin === "https://rainbowsixcuba.com" ||
-        redirectUrl.origin === "http://localhost:5173" ||
         redirectUrl.hostname.endsWith(".chromiumapp.org");
 
       if (!allowedReturn) {

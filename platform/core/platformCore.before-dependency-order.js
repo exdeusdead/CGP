@@ -1,5 +1,4 @@
 const engineRegistry = require("./engineRegistry");
-const dependencyResolver = require("./dependencyResolver");
 const ServiceRegistry = require("./serviceRegistry");
 const EventBus = require("./eventBus");
 const releaseManifest = require("./releaseManifest");
@@ -68,15 +67,7 @@ class PlatformCore {
       ]
     };
 
-    const orderedEngines = dependencyResolver.resolve(
-      Array.from(this.engines.values())
-    );
-
-    this.lifecycleOrder = orderedEngines;
-
-    for (const engine of orderedEngines) {
-
-      const name = engine.name;
+    for (const [name, engine] of this.engines) {
 
       if (runtimeSkip[runtime]?.includes(name)) {
         engine.status = "skipped";
@@ -212,11 +203,9 @@ class PlatformCore {
 
   async start(context = {}) {
 
-    const engines = this.lifecycleOrder || Array.from(this.engines.values());
+    for (const engine of this.engines.values()) {
 
-    for (const engine of engines) {
-
-      if (engine.status === "blocked" || engine.status === "skipped" || engine.status === "failed")
+      if (engine.status === "blocked" || engine.status === "skipped")
         continue;
 
       if (typeof engine.start !== "function")
@@ -245,9 +234,7 @@ class PlatformCore {
 
   async stop(context = {}) {
 
-    const engines = [
-      ...(this.lifecycleOrder || Array.from(this.engines.values()))
-    ].reverse();
+    const engines = [...this.engines.values()].reverse();
 
     for (const engine of engines) {
 

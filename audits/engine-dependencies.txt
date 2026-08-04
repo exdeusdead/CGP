@@ -1,0 +1,108 @@
+--------------------------------------------------
+platform/engines/asset/engine.js
+Name         : Asset Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : ["storage","logger","config"]
+--------------------------------------------------
+platform/engines/audit/engine.js
+Name         : Audit Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : []
+--------------------------------------------------
+platform/engines/backup/engine.js
+Name         : Backup Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : ["storage"]
+--------------------------------------------------
+platform/engines/competition/engine.js
+Name         : Competition Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : ["storage","logger","config"]
+--------------------------------------------------
+platform/engines/config/engine.js
+Name         : Config Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : ["storage"]
+--------------------------------------------------
+platform/engines/dashboard/engine.js
+Name         : Dashboard Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : ["storage","logger","config"]
+--------------------------------------------------
+platform/engines/distribution/engine.js
+Name         : Distribution Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : ["storage","logger","config"]
+--------------------------------------------------
+platform/engines/identity/engine.js
+Name         : Identity Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : ["storage","logger","config"]
+--------------------------------------------------
+platform/engines/logger/engine.js
+Name         : Logger Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : ["storage"]
+--------------------------------------------------
+platform/engines/mediaos/engine.js
+Name         : MediaOS
+Version      : 1.0.0-alpha
+Status       : created
+Dependencies : ["storage"]
+--------------------------------------------------
+platform/engines/migration/engine.js
+Name         : Migration Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : []
+--------------------------------------------------
+platform/engines/render/engine.js
+Name         : Render Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : ["storage","logger","config"]
+--------------------------------------------------
+platform/engines/runtime/engine.js
+Name         : Runtime Engine
+Version      : 0.2.0-alpha
+Status       : created
+Dependencies : ["storage","logger","config"]
+--------------------------------------------------
+platform/engines/scheduler/engine.js
+Name         : Scheduler Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : ["storage","logger","runtime"]
+--------------------------------------------------
+platform/engines/statistics/engine.js
+Name         : Statistics Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : ["logger","config"]
+--------------------------------------------------
+platform/engines/storage/engine.js
+Name         : Storage Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : []
+--------------------------------------------------
+platform/engines/task/engine.js
+Name         : Task Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : ["storage","logger","config"]
+--------------------------------------------------
+platform/engines/website/engine.js
+Name         : Website Engine
+Version      : 0.1.0-alpha
+Status       : created
+Dependencies : ["storage","config"]

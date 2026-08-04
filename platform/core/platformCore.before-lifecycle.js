@@ -1,5 +1,4 @@
 const engineRegistry = require("./engineRegistry");
-const dependencyResolver = require("./dependencyResolver");
 const ServiceRegistry = require("./serviceRegistry");
 const EventBus = require("./eventBus");
 const releaseManifest = require("./releaseManifest");
@@ -68,15 +67,7 @@ class PlatformCore {
       ]
     };
 
-    const orderedEngines = dependencyResolver.resolve(
-      Array.from(this.engines.values())
-    );
-
-    this.lifecycleOrder = orderedEngines;
-
-    for (const engine of orderedEngines) {
-
-      const name = engine.name;
+    for (const [name, engine] of this.engines) {
 
       if (runtimeSkip[runtime]?.includes(name)) {
         engine.status = "skipped";
@@ -87,6 +78,15 @@ class PlatformCore {
 
       if (typeof engine.initialize !== "function") continue;
 
+      const deps = typeof engine.dependencies === "function" ? engine.dependencies() : [];
+      const missing = deps.filter(dep => !this.getService(dep));
+
+      if (missing.length) {
+        engine.status = "blocked";
+        engine.blockedReason = `Missing dependencies: ${missing.join(", ")}`;
+        console.log(`Engine blocked: ${name} | ${engine.blockedReason}`);
+        continue;
+      }
 
       console.log("Loading Engine:", name);
       await engine.initialize(this.buildContext(context));
@@ -209,70 +209,6 @@ class PlatformCore {
       eventBus: this.events.stats()
     };
   }
-
-  async start(context = {}) {
-
-    const engines = this.lifecycleOrder || Array.from(this.engines.values());
-
-    for (const engine of engines) {
-
-      if (engine.status === "blocked" || engine.status === "skipped" || engine.status === "failed")
-        continue;
-
-      if (typeof engine.start !== "function")
-        continue;
-
-      try {
-
-        console.log(`Starting Engine: ${engine.name}`);
-        await engine.start(this.buildContext(context));
-
-      } catch (error) {
-
-        engine.status = "failed";
-        engine.lastError = error.message;
-
-        console.error(`Engine start failed: ${engine.name}`);
-        console.error(error.message);
-
-      }
-
-    }
-
-    return true;
-
-  }
-
-  async stop(context = {}) {
-
-    const engines = [
-      ...(this.lifecycleOrder || Array.from(this.engines.values()))
-    ].reverse();
-
-    for (const engine of engines) {
-
-      if (typeof engine.stop !== "function")
-        continue;
-
-      try {
-
-        console.log(`Stopping Engine: ${engine.name}`);
-        await engine.stop(this.buildContext(context));
-
-      } catch (error) {
-
-        console.error(`Engine stop failed: ${engine.name}`);
-        console.error(error.message);
-
-      }
-
-    }
-
-    return true;
-
-  }
-
-
 }
 
 module.exports = new PlatformCore();

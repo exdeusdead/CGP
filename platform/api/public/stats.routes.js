@@ -9,9 +9,11 @@ router.get("/health", (req, res) => {
 
 router.get("/players", (req, res) => {
   const limit = req.query.limit || 25;
+  const players = statsService.listPlayers(limit);
+
   res.json({
-    count: Number(limit) || 25,
-    players: statsService.listPlayers(limit)
+    count: players.length,
+    players
   });
 });
 

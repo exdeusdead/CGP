@@ -4,7 +4,8 @@ const path = require("path");
 const ROOT = path.join(process.env.HOME, "CGP");
 
 const SEARCH_PATHS = [
-    path.join(ROOT, "platform", "engines")
+    path.join(ROOT, "platform", "engines"),
+    path.join(ROOT, "apps", "RainbowSixCubaBot", "services")
 ];
 
 const registry = [];
@@ -32,27 +33,6 @@ function loadEngine(engineFile) {
 
         if (typeof engine.status !== "string")
             throw new Error("Missing engine.status");
-
-        const runtimeContract = [
-            "dependencies",
-            "initialize",
-            "health",
-            "diagnostics"
-        ];
-
-        const missing = runtimeContract.filter(
-            fn => typeof engine[fn] !== "function"
-        );
-
-        if (missing.length) {
-
-            console.log(
-                `[EngineRegistry] Skipping tool "${engine.name}" (${missing.join(", ")})`
-            );
-
-            return;
-
-        }
 
         if (names.has(engine.name))
             throw new Error(`Duplicate engine "${engine.name}"`);

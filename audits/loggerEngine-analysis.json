@@ -1,0 +1,13 @@
+{
+  "engine": "loggerEngine",
+  "root": "/home/adrian/CGP/apps/RainbowSixCubaBot/services/loggerEngine",
+  "files": [
+    "engine.js"
+  ],
+  "requires": [
+    {
+      "file": "engine.js",
+      "require": "../../core/engine"
+    }
+  ]
+}

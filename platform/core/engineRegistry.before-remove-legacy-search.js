@@ -4,7 +4,8 @@ const path = require("path");
 const ROOT = path.join(process.env.HOME, "CGP");
 
 const SEARCH_PATHS = [
-    path.join(ROOT, "platform", "engines")
+    path.join(ROOT, "platform", "engines"),
+    path.join(ROOT, "apps", "RainbowSixCubaBot", "services")
 ];
 
 const registry = [];
