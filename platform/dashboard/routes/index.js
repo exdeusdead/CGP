@@ -29,6 +29,23 @@ router.get("/api/health", proxy("getHealth"));
 router.get("/api/engines", proxy("getEngines"));
 router.get("/api/services", proxy("getServices"));
 
+router.get("/api/processes", async (req, res) => {
+    try {
+        const processes = await platform.getProcesses();
+
+        res.json({
+            ok: true,
+            count: processes.length,
+            processes
+        });
+    } catch (error) {
+        res.status(503).json({
+            ok: false,
+            error: error.message
+        });
+    }
+});
+
 router.get("/api/dashboard-health", (req, res) => {
     res.json({
         ok: true,

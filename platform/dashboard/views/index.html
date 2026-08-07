@@ -256,6 +256,62 @@ footer {
         padding: 20px;
     }
 }
+
+.process-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 14px;
+    margin-top: 14px;
+}
+
+.process-card {
+    background: #181818;
+    border: 1px solid #303030;
+    border-radius: 8px;
+    padding: 16px;
+}
+
+.process-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.process-name {
+    font-weight: 700;
+    word-break: break-word;
+}
+
+.process-status {
+    font-size: 12px;
+    text-transform: uppercase;
+    font-weight: 700;
+}
+
+.process-status.online {
+    color: #42b883;
+}
+
+.process-status.offline,
+.process-status.errored,
+.process-status.stopped {
+    color: #ff6b6b;
+}
+
+.process-meta {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 13px;
+}
+
+.process-meta strong {
+    display: block;
+    margin-top: 3px;
+}
+
 </style>
 </head>
 
@@ -433,9 +489,95 @@ footer {
     <span id="updated">Waiting for platform...</span>
 </footer>
 
+
+<section id="processPanel" class="card">
+    <h2>PM2 Processes</h2>
+    <p>Live CGP application runtime state</p>
+
+    <div id="processSummary">Loading processes...</div>
+    <div id="processes" class="process-grid"></div>
+</section>
+
 </main>
 
+
+
+
 <script>
+
+function processUptime(timestamp) {
+    if (!timestamp) return "—";
+
+    const seconds = Math.max(
+        0,
+        Math.floor((Date.now() - timestamp) / 1000)
+    );
+
+    return formatUptime(seconds);
+}
+
+function renderProcesses(data) {
+    const processes = data?.processes || [];
+
+    const online = processes.filter(
+        process => process.status === "online"
+    ).length;
+
+    $("processSummary").textContent =
+        `${online}/${processes.length} online`;
+
+    $("processes").innerHTML = processes.length
+        ? processes.map(process => `
+            <div class="process-card">
+                <div class="process-head">
+                    <span class="process-name">
+                        ${process.name}
+                    </span>
+
+                    <span class="process-status ${process.status}">
+                        ${process.status}
+                    </span>
+                </div>
+
+                <div class="process-meta">
+                    <div>
+                        PID
+                        <strong>${process.pid ?? "—"}</strong>
+                    </div>
+
+                    <div>
+                        Restarts
+                        <strong>${process.restarts ?? 0}</strong>
+                    </div>
+
+                    <div>
+                        CPU
+                        <strong>${
+                            process.cpu == null
+                                ? "—"
+                                : process.cpu + "%"
+                        }</strong>
+                    </div>
+
+                    <div>
+                        Memory
+                        <strong>${
+                            process.memory == null
+                                ? "—"
+                                : bytes(process.memory)
+                        }</strong>
+                    </div>
+
+                    <div>
+                        Uptime
+                        <strong>${processUptime(process.uptime)}</strong>
+                    </div>
+                </div>
+            </div>
+        `).join("")
+        : "No PM2 processes detected.";
+}
+
 const $ = id => document.getElementById(id);
 
 function escapeHtml(value) {
@@ -491,13 +633,16 @@ async function loadDashboard() {
 
     try {
 
-        const [summary, runtime, memory, health] =
+        const [summary, runtime, memory, health, processes] =
             await Promise.all([
                 request("/api/summary"),
                 request("/api/runtime"),
                 request("/api/memory"),
-                request("/api/health")
+                request("/api/health"),
+                request("/api/processes")
             ]);
+
+        renderProcesses(processes);
 
         const platform = summary.platform || {};
         const engineSummary = summary.engines || {};
