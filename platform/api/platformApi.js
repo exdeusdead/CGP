@@ -11,6 +11,7 @@ module.exports = function createPlatformApi(platform) {
     router.use(require("./routes/summary")(platform));
     router.use(require("./routes/memory")(platform));
     router.use(require("./routes/runtime")(platform));
+router.use(require("./routes/products")(platform));
 
     return router;
 
