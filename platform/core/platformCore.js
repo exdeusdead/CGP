@@ -3,6 +3,7 @@ const dependencyResolver = require("./dependencyResolver");
 const ServiceRegistry = require("./serviceRegistry");
 const EventBus = require("./eventBus");
 const releaseManifest = require("./releaseManifest");
+const RuntimeMonitor = require("../services/runtimeMonitor");
 
 class PlatformCore {
   constructor() {
@@ -11,6 +12,8 @@ class PlatformCore {
     this.engines = new Map();
     this.services = new ServiceRegistry();
     this.events = new EventBus();
+    this.runtimeMonitor = new RuntimeMonitor(this);
+    this.services.register("runtimeMonitor", this.runtimeMonitor);
     this.startedAt = new Date();
 
     for (const engine of engineRegistry) {
@@ -24,6 +27,15 @@ class PlatformCore {
 
   get(name) {
     return this.engines.get(name);
+  }
+
+
+  getEngines() {
+    return this.engines;
+  }
+
+  getServiceNames() {
+    return this.services.list();
   }
 
   registerService(name, service) {
@@ -166,6 +178,8 @@ class PlatformCore {
 
   async health() {
     const results = [];
+
+    this.registerService("runtimeMonitor", this.runtimeMonitor);
 
     for (const [name, engine] of this.engines) {
       if (typeof engine.health === "function") {

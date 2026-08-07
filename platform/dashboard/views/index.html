@@ -2,34 +2,620 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CGP Operations Dashboard</title>
+
 <style>
-body{
-    font-family:Arial,Helvetica,sans-serif;
-    background:#111;
-    color:#eee;
-    margin:40px;
+:root {
+    color-scheme: dark;
+    --bg: #090c10;
+    --header: #0e1217;
+    --panel: #13181e;
+    --panel2: #181f27;
+    --border: #29323c;
+    --text: #eef3f7;
+    --muted: #8793a0;
+    --green: #42b883;
+    --yellow: #e5b454;
+    --red: #e05d68;
+    --blue: #66a8ff;
 }
-h1{
-    color:#42b883;
+
+* { box-sizing: border-box; }
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: Inter, Arial, Helvetica, sans-serif;
 }
-.card{
-    background:#1d1d1d;
-    padding:20px;
-    border-radius:8px;
-    max-width:700px;
+
+header {
+    background: var(--header);
+    border-bottom: 1px solid var(--border);
+    padding: 24px 32px;
+}
+
+.header-inner {
+    max-width: 1500px;
+    margin: auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+}
+
+h1 {
+    margin: 0;
+    font-size: 24px;
+}
+
+.subtitle {
+    margin-top: 6px;
+    color: var(--muted);
+    font-size: 14px;
+}
+
+.live {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--green);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+main {
+    max-width: 1500px;
+    margin: auto;
+    padding: 28px 32px 40px;
+}
+
+.grid {
+    display: grid;
+    gap: 16px;
+}
+
+.metrics {
+    grid-template-columns: repeat(4, minmax(160px, 1fr));
+}
+
+.system-grid {
+    grid-template-columns: repeat(6, minmax(130px, 1fr));
+}
+
+.card {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+}
+
+.label {
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .09em;
+}
+
+.value {
+    margin-top: 8px;
+    font-size: 28px;
+    font-weight: 700;
+}
+
+.system-value {
+    margin-top: 7px;
+    font-size: 17px;
+    font-weight: 600;
+}
+
+.green { color: var(--green); }
+.yellow { color: var(--yellow); }
+.red { color: var(--red); }
+.blue { color: var(--blue); }
+
+.section {
+    margin-top: 28px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 17px;
+}
+
+.section-note {
+    color: var(--muted);
+    font-size: 12px;
+}
+
+.memory-bar {
+    height: 8px;
+    background: #252d36;
+    border-radius: 999px;
+    overflow: hidden;
+    margin-top: 13px;
+}
+
+.memory-fill {
+    height: 100%;
+    width: 0;
+    background: var(--green);
+    transition: width .4s ease;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 13px 15px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+th {
+    color: var(--muted);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+}
+
+tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+tbody tr:hover {
+    background: var(--panel2);
+}
+
+.engine-status {
+    font-weight: 600;
+}
+
+.running,
+.started,
+.initialized {
+    color: var(--green);
+}
+
+.stopped,
+.disabled {
+    color: var(--yellow);
+}
+
+.failed,
+.error {
+    color: var(--red);
+}
+
+.services {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.service {
+    padding: 8px 11px;
+    background: var(--panel2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+#error {
+    display: none;
+    margin-bottom: 18px;
+    color: #ffadb5;
+    border-color: var(--red);
+}
+
+footer {
+    color: var(--muted);
+    font-size: 11px;
+    margin-top: 24px;
+    display: flex;
+    justify-content: space-between;
+}
+
+@media (max-width: 1100px) {
+    .system-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 800px) {
+    .metrics {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .system-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    main {
+        padding: 20px;
+    }
+
+    header {
+        padding: 20px;
+    }
 }
 </style>
 </head>
+
 <body>
 
-<h1>CGP Operations Dashboard</h1>
+<header>
+<div class="header-inner">
+    <div>
+        <h1>CGP Operations Dashboard</h1>
+        <div class="subtitle">
+            Platform Runtime · Observability · Engine Health
+        </div>
+    </div>
+
+    <div class="live" id="connectionState">
+        <span class="dot"></span>
+        LIVE
+    </div>
+</div>
+</header>
+
+<main>
+
+<div id="error" class="card"></div>
+
+<section class="grid metrics">
+
+    <div class="card">
+        <div class="label">Engines</div>
+        <div class="value" id="engineCount">—</div>
+    </div>
+
+    <div class="card">
+        <div class="label">Running</div>
+        <div class="value green" id="runningCount">—</div>
+    </div>
+
+    <div class="card">
+        <div class="label">Services</div>
+        <div class="value" id="serviceCount">—</div>
+    </div>
+
+    <div class="card">
+        <div class="label">Platform</div>
+        <div class="value" id="platformState">—</div>
+    </div>
+
+</section>
+
+<section class="section">
+
+<div class="section-header">
+    <h2>System Runtime</h2>
+    <span class="section-note">CGP Platform process</span>
+</div>
+
+<div class="grid system-grid">
+
+    <div class="card">
+        <div class="label">PID</div>
+        <div class="system-value" id="pid">—</div>
+    </div>
+
+    <div class="card">
+        <div class="label">Node</div>
+        <div class="system-value" id="nodeVersion">—</div>
+    </div>
+
+    <div class="card">
+        <div class="label">OS</div>
+        <div class="system-value" id="osPlatform">—</div>
+    </div>
+
+    <div class="card">
+        <div class="label">Architecture</div>
+        <div class="system-value" id="architecture">—</div>
+    </div>
+
+    <div class="card">
+        <div class="label">Uptime</div>
+        <div class="system-value blue" id="uptime">—</div>
+    </div>
+
+    <div class="card">
+        <div class="label">RSS Memory</div>
+        <div class="system-value" id="rss">—</div>
+    </div>
+
+</div>
+
+</section>
+
+<section class="section">
+
+<div class="section-header">
+    <h2>Process Memory</h2>
+    <span class="section-note">Node.js memory allocation</span>
+</div>
+
+<div class="grid metrics">
+
+    <div class="card">
+        <div class="label">Heap Used</div>
+        <div class="system-value" id="heapUsed">—</div>
+        <div class="memory-bar">
+            <div class="memory-fill" id="heapBar"></div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="label">Heap Total</div>
+        <div class="system-value" id="heapTotal">—</div>
+    </div>
+
+    <div class="card">
+        <div class="label">External</div>
+        <div class="system-value" id="external">—</div>
+    </div>
+
+    <div class="card">
+        <div class="label">Array Buffers</div>
+        <div class="system-value" id="arrayBuffers">—</div>
+    </div>
+
+</div>
+
+</section>
+
+<section class="section">
+
+<div class="section-header">
+    <h2>Engine Runtime</h2>
+    <span class="section-note" id="engineHealthText">Loading...</span>
+</div>
+
+<div class="card" style="padding:0;overflow:auto">
+
+<table>
+<thead>
+<tr>
+    <th>Engine</th>
+    <th>Version</th>
+    <th>Status</th>
+    <th>Started</th>
+    <th>Last Error</th>
+</tr>
+</thead>
+
+<tbody id="engineTable">
+<tr>
+    <td colspan="5">Loading platform...</td>
+</tr>
+</tbody>
+
+</table>
+
+</div>
+</section>
+
+<section class="section">
+
+<div class="section-header">
+    <h2>Registered Services</h2>
+    <span class="section-note" id="serviceText"></span>
+</div>
 
 <div class="card">
-    <h2>Dashboard Bootstrap Successful</h2>
-    <p>The dashboard structure has been initialized.</p>
-    <p>Platform API integration will be implemented next.</p>
+    <div id="services" class="services">Loading...</div>
 </div>
+
+</section>
+
+<footer>
+    <span>CGP Platform · M061 Operations Dashboard</span>
+    <span id="updated">Waiting for platform...</span>
+</footer>
+
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function escapeHtml(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function bytes(value) {
+    if (!Number.isFinite(value)) return "—";
+
+    const units = ["B", "KB", "MB", "GB"];
+    let size = value;
+    let unit = 0;
+
+    while (size >= 1024 && unit < units.length - 1) {
+        size /= 1024;
+        unit++;
+    }
+
+    return `${size.toFixed(unit >= 2 ? 1 : 0)} ${units[unit]}`;
+}
+
+function formatUptime(seconds) {
+    if (!Number.isFinite(seconds)) return "—";
+
+    const days = Math.floor(seconds / 86400);
+    const hours = Math.floor((seconds % 86400) / 3600);
+    const minutes = Math.floor((seconds % 3600) / 60);
+
+    if (days > 0)
+        return `${days}d ${hours}h ${minutes}m`;
+
+    if (hours > 0)
+        return `${hours}h ${minutes}m`;
+
+    return `${minutes}m`;
+}
+
+async function request(path) {
+    const response = await fetch(path, { cache: "no-store" });
+
+    if (!response.ok)
+        throw new Error(`${path} returned ${response.status}`);
+
+    return response.json();
+}
+
+async function loadDashboard() {
+
+    try {
+
+        const [summary, runtime, memory, health] =
+            await Promise.all([
+                request("/api/summary"),
+                request("/api/runtime"),
+                request("/api/memory"),
+                request("/api/health")
+            ]);
+
+        const platform = summary.platform || {};
+        const engineSummary = summary.engines || {};
+        const serviceSummary = summary.services || {};
+        const engines = platform.engines || [];
+
+        $("engineCount").textContent =
+            engineSummary.total ?? engines.length;
+
+        $("runningCount").textContent =
+            engineSummary.running ?? 0;
+
+        $("serviceCount").textContent =
+            serviceSummary.count ?? 0;
+
+        const unhealthy =
+            Array.isArray(health)
+                ? health.filter(item => item && item.healthy === false).length
+                : 0;
+
+        const failed =
+            (engineSummary.failed || 0) + unhealthy;
+
+        $("platformState").textContent =
+            failed ? "DEGRADED" : "HEALTHY";
+
+        $("platformState").className =
+            `value ${failed ? "red" : "green"}`;
+
+        $("pid").textContent = runtime.pid ?? "—";
+        $("nodeVersion").textContent = runtime.node ?? "—";
+        $("osPlatform").textContent = runtime.platform ?? "—";
+        $("architecture").textContent = runtime.arch ?? "—";
+        $("uptime").textContent = formatUptime(runtime.uptime);
+
+        $("rss").textContent = bytes(memory.rss);
+        $("heapUsed").textContent = bytes(memory.heapUsed);
+        $("heapTotal").textContent = bytes(memory.heapTotal);
+        $("external").textContent = bytes(memory.external);
+        $("arrayBuffers").textContent = bytes(memory.arrayBuffers);
+
+        const heapPercent =
+            memory.heapTotal > 0
+                ? Math.min(
+                    100,
+                    (memory.heapUsed / memory.heapTotal) * 100
+                  )
+                : 0;
+
+        $("heapBar").style.width = `${heapPercent}%`;
+
+        $("engineTable").innerHTML =
+            engines.map(engine => `
+                <tr>
+                    <td>${escapeHtml(engine.name)}</td>
+                    <td>${escapeHtml(engine.version)}</td>
+                    <td class="engine-status ${escapeHtml(engine.status)}">
+                        ${escapeHtml(engine.status)}
+                    </td>
+                    <td>
+                        ${
+                            engine.startedAt
+                                ? escapeHtml(
+                                    new Date(engine.startedAt)
+                                        .toLocaleString()
+                                  )
+                                : "—"
+                        }
+                    </td>
+                    <td>${escapeHtml(engine.lastError || "—")}</td>
+                </tr>
+            `).join("");
+
+        $("engineHealthText").textContent =
+            `${engines.length - unhealthy}/${engines.length} healthy`;
+
+        const services = serviceSummary.names || [];
+
+        $("serviceText").textContent =
+            `${services.length} registered`;
+
+        $("services").innerHTML =
+            services.length
+                ? services.map(name =>
+                    `<span class="service">${escapeHtml(name)}</span>`
+                  ).join("")
+                : "No services registered.";
+
+        $("connectionState").innerHTML =
+            '<span class="dot"></span> LIVE';
+
+        $("connectionState").className = "live";
+
+        $("updated").textContent =
+            `Updated ${new Date().toLocaleString()}`;
+
+        $("error").style.display = "none";
+
+    } catch (error) {
+
+        $("error").textContent =
+            `Platform connection error: ${error.message}`;
+
+        $("error").style.display = "block";
+
+        $("platformState").textContent = "OFFLINE";
+        $("platformState").className = "value red";
+
+        $("connectionState").innerHTML =
+            '<span class="dot"></span> OFFLINE';
+
+        $("connectionState").className = "live red";
+    }
+}
+
+loadDashboard();
+setInterval(loadDashboard, 5000);
+</script>
 
 </body>
 </html>
