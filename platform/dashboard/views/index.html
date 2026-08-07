@@ -312,6 +312,85 @@ footer {
     margin-top: 3px;
 }
 
+
+/* ===== M062 Operations Control ===== */
+
+.control-panel {
+    margin-top: 24px;
+}
+
+.control-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 14px;
+    margin-top: 16px;
+}
+
+.control-process {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 10px;
+    padding: 16px;
+}
+
+.control-process-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+}
+
+.control-process-name {
+    font-weight: 700;
+    word-break: break-word;
+}
+
+.control-process-meta {
+    margin-top: 10px;
+    font-size: 13px;
+    opacity: .75;
+    line-height: 1.6;
+}
+
+.control-actions {
+    margin-top: 14px;
+}
+
+.control-button {
+    border: 1px solid #d29922;
+    background: transparent;
+    color: #e3b341;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.control-button:hover {
+    background: rgba(210,153,34,.12);
+}
+
+.control-button:disabled {
+    opacity: .45;
+    cursor: not-allowed;
+}
+
+.control-status {
+    margin-top: 14px;
+    min-height: 20px;
+    font-size: 13px;
+}
+
+.control-history {
+    margin-top: 20px;
+    font-size: 13px;
+}
+
+.control-history-entry {
+    border-top: 1px solid #30363d;
+    padding: 9px 0;
+}
+
 </style>
 </head>
 
@@ -496,6 +575,26 @@ footer {
 
     <div id="processSummary">Loading processes...</div>
     <div id="processes" class="process-grid"></div>
+</section>
+
+
+<section class="card control-panel" id="operationsControlPanel">
+    <h2>Process Control</h2>
+    <p>
+        Controlled runtime operations for CGP services.
+        Only explicitly authorized processes can be restarted.
+    </p>
+
+    <div id="operationsControlStatus" class="control-status">
+        Loading control capabilities...
+    </div>
+
+    <div id="operationsControlGrid" class="control-grid"></div>
+
+    <div class="control-history">
+        <h3>Recent Operations</h3>
+        <div id="operationsHistory">No operations recorded.</div>
+    </div>
 </section>
 
 </main>
@@ -760,6 +859,200 @@ async function loadDashboard() {
 
 loadDashboard();
 setInterval(loadDashboard, 5000);
+
+/* ===== M062 Operations Control ===== */
+
+async function loadOperationsControl() {
+    const status = document.getElementById("operationsControlStatus");
+    const grid = document.getElementById("operationsControlGrid");
+
+    if (!status || !grid)
+        return;
+
+    try {
+        const [capResponse, processResponse] = await Promise.all([
+            fetch("/api/operations/capabilities", { cache: "no-store" }),
+            fetch("/api/processes", { cache: "no-store" })
+        ]);
+
+        if (!capResponse.ok || !processResponse.ok)
+            throw new Error("Operations API unavailable");
+
+        const capabilities = await capResponse.json();
+        const processData = await processResponse.json();
+
+        const allowed = new Set(capabilities.processes || []);
+        const processes = processData.processes || [];
+
+        status.textContent =
+            `${allowed.size} processes authorized for controlled restart.`;
+
+        grid.innerHTML = processes.map(process => {
+            const controllable = allowed.has(process.name);
+
+            return `
+                <div class="control-process">
+                    <div class="control-process-header">
+                        <span class="control-process-name">
+                            ${escapeHtmlM062(process.name)}
+                        </span>
+
+                        <span class="process-status ${escapeHtmlM062(process.status)}">
+                            ${escapeHtmlM062(process.status)}
+                        </span>
+                    </div>
+
+                    <div class="control-process-meta">
+                        PID: ${process.pid ?? "—"}<br>
+                        Restarts: ${process.restarts ?? 0}<br>
+                        Memory: ${formatControlBytes(process.memory)}
+                    </div>
+
+                    <div class="control-actions">
+                        ${
+                            controllable
+                            ? `<button
+                                  class="control-button"
+                                  data-process="${escapeHtmlM062(process.name)}"
+                                  onclick="restartControlledProcess(this)">
+                                  Restart
+                               </button>`
+                            : `<button class="control-button" disabled>
+                                  Protected
+                               </button>`
+                        }
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        await loadOperationsHistory();
+
+    } catch (error) {
+        status.textContent = `Control plane unavailable: ${error.message}`;
+        grid.innerHTML = "";
+    }
+}
+
+async function restartControlledProcess(button) {
+    const name = button.dataset.process;
+
+    if (!name)
+        return;
+
+    const confirmed = window.confirm(
+        `Restart ${name}?\n\n` +
+        `The process will be restarted through the CGP Operations Control Plane.`
+    );
+
+    if (!confirmed)
+        return;
+
+    const originalText = button.textContent;
+
+    button.disabled = true;
+    button.textContent = "Restarting...";
+
+    try {
+        const response = await fetch(
+            `/api/operations/restart/${encodeURIComponent(name)}`,
+            {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                }
+            }
+        );
+
+        const data = await response.json();
+
+        if (!response.ok || !data.ok)
+            throw new Error(data.error || `HTTP ${response.status}`);
+
+        button.textContent = "Restarted";
+
+        setTimeout(() => {
+            loadOperationsControl();
+        }, 1200);
+
+    } catch (error) {
+        window.alert(`Restart failed: ${error.message}`);
+        button.disabled = false;
+        button.textContent = originalText;
+    }
+}
+
+async function loadOperationsHistory() {
+    const target = document.getElementById("operationsHistory");
+
+    if (!target)
+        return;
+
+    try {
+        const response = await fetch(
+            "/api/operations/history?limit=10",
+            { cache: "no-store" }
+        );
+
+        if (!response.ok)
+            throw new Error(`HTTP ${response.status}`);
+
+        const data = await response.json();
+        const history = data.history || [];
+
+        if (!history.length) {
+            target.textContent = "No operations recorded.";
+            return;
+        }
+
+        target.innerHTML = history.map(operation => `
+            <div class="control-history-entry">
+                <strong>${escapeHtmlM062(operation.action || "operation")}</strong>
+                —
+                ${escapeHtmlM062(operation.process || "unknown")}
+                —
+                ${escapeHtmlM062(operation.status || "unknown")}
+                <br>
+                <span style="opacity:.65">
+                    ${escapeHtmlM062(operation.timestamp || "")}
+                </span>
+            </div>
+        `).join("");
+
+    } catch (error) {
+        target.textContent = `Unable to load operation history: ${error.message}`;
+    }
+}
+
+function escapeHtmlM062(value) {
+    return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+}
+
+function formatControlBytes(value) {
+    if (value === null || value === undefined)
+        return "—";
+
+    const mb = Number(value) / 1024 / 1024;
+
+    if (!Number.isFinite(mb))
+        return "—";
+
+    return `${mb.toFixed(1)} MB`;
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    loadOperationsControl();
+
+    setInterval(() => {
+        loadOperationsControl();
+    }, 15000);
+});
+
 </script>
 
 </body>

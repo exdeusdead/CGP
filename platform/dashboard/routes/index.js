@@ -1,6 +1,7 @@
 const express = require("express");
 const path = require("path");
 const PlatformClient = require("../services/platformClient");
+const opsService = require("../../services/operations/ops.service");
 
 const router = express.Router();
 const platform = new PlatformClient();
@@ -52,6 +53,77 @@ router.get("/api/dashboard-health", (req, res) => {
         service: "CGP Operations Dashboard",
         timestamp: new Date().toISOString()
     });
+});
+
+
+/*
+ * M062 Operations Control Plane
+ *
+ * This API is intentionally exposed only through the local Operations
+ * Dashboard listener. Process control is additionally restricted by the
+ * allowlist inside ops.service.
+ */
+
+router.get("/api/operations/capabilities", (req, res) => {
+    res.json({
+        ok: true,
+        ...opsService.getCapabilities()
+    });
+});
+
+router.get("/api/operations/history", (req, res) => {
+    const history = opsService.getOperationHistory(req.query.limit);
+
+    res.json({
+        ok: true,
+        count: history.length,
+        history
+    });
+});
+
+router.post("/api/operations/restart/:name", async (req, res) => {
+
+    const name = req.params.name;
+
+    try {
+
+        const operation = await opsService.restartProcess(name, {
+            actor: "CGP Operations Dashboard",
+            source: req.ip
+        });
+
+        res.json({
+            ok: true,
+            operation
+        });
+
+    } catch (error) {
+
+        if (error.code === "PROCESS_NOT_ALLOWED") {
+            return res.status(403).json({
+                ok: false,
+                error: error.message,
+                code: error.code
+            });
+        }
+
+        if (error.code === "PROCESS_NOT_FOUND") {
+            return res.status(404).json({
+                ok: false,
+                error: error.message,
+                code: error.code
+            });
+        }
+
+        console.error("[Operations Control]", error);
+
+        res.status(500).json({
+            ok: false,
+            error: "Process operation failed"
+        });
+
+    }
+
 });
 
 module.exports = router;
