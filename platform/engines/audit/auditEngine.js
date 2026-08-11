@@ -68,7 +68,7 @@ class AuditEngine extends Engine {
 
         const files=this.walk(this.root);
 
-        return{
+        const report = {
 
             generatedAt:new Date().toISOString(),
 
@@ -103,6 +103,11 @@ class AuditEngine extends Engine {
             }
 
         };
+        this.storage?.saveJson("audit", "latest", report);
+        this.storage?.appendJsonList("audit", "history", report, 100);
+        this.logger?.info?.("AuditEngine", "Platform audit completed", report.statistics);
+        return report;
+
 
     }
 
