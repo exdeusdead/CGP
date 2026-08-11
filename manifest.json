@@ -2,7 +2,7 @@
   "platform": "CGP",
   "version": "0.1.0-alpha",
   "status": "operational-alpha",
-  "currentMilestone": "M-023",
+  "currentMilestone": "M064",
   "products": [
     "RainbowSixCuba"
   ],
@@ -18,5 +18,15 @@
     "Historical data is immutable",
     "Game agnostic core",
     "Products consume platform capabilities"
-  ]
+  ],
+  "runtimeBaseline": {
+    "completedThrough": "M063",
+    "current": "M064",
+    "components": {
+      "platformRuntime": "operational",
+      "operationsDashboard": "operational",
+      "operationsControlPlane": "operational",
+      "productRuntimeTopology": "operational"
+    }
+  }
 }

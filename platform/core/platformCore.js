@@ -4,11 +4,14 @@ const ServiceRegistry = require("./serviceRegistry");
 const EventBus = require("./eventBus");
 const releaseManifest = require("./releaseManifest");
 const RuntimeMonitor = require("../services/runtimeMonitor");
+const platformManifest = require("../../manifest.json");
 
 class PlatformCore {
   constructor() {
-    this.name = "CGP Platform";
-    this.version = "0.1.0-alpha";
+    this.name = platformManifest.platform;
+    this.version = platformManifest.version;
+    this.releaseStatus = platformManifest.status;
+    this.currentMilestone = platformManifest.currentMilestone;
     this.engines = new Map();
     this.services = new ServiceRegistry();
     this.events = new EventBus();
@@ -126,6 +129,8 @@ class PlatformCore {
     const logger = this.getService("logger");
     logger?.info?.("PlatformCore", "Platform initialized", {
       version: this.version,
+      releaseStatus: this.releaseStatus,
+      currentMilestone: this.currentMilestone,
       engines: this.engines.size,
       services: this.services.list().length
     });
@@ -212,10 +217,13 @@ class PlatformCore {
     const currentBranch = config?.get?.("currentBranch", "Core") || "Core";
 
     return {
-      name: platformName,
+      name: this.name,
+      configuredName: platformName,
       brand: platformBrand,
       branch: currentBranch,
       version: this.version,
+      releaseStatus: this.releaseStatus,
+      currentMilestone: this.currentMilestone,
       startedAt: this.startedAt,
       uptimeSeconds: this.uptimeSeconds(),
       engines: this.status(),
