@@ -43,6 +43,10 @@ class PlatformClient {
         return this.request("/services");
     }
 
+    getProducts() {
+        return this.request("/products");
+    }
+
     async getProcesses() {
         const { execFile } = require("child_process");
         const { promisify } = require("util");

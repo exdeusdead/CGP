@@ -29,6 +29,7 @@ router.get("/api/status", proxy("getStatus"));
 router.get("/api/health", proxy("getHealth"));
 router.get("/api/engines", proxy("getEngines"));
 router.get("/api/services", proxy("getServices"));
+router.get("/api/products", proxy("getProducts"));
 
 router.get("/api/processes", async (req, res) => {
     try {

@@ -579,6 +579,19 @@ footer {
 
 
 <section class="card control-panel" id="operationsControlPanel">
+    <h2>Product Runtime Topology</h2>
+
+    <div class="card">
+        <p>
+            Runtime ownership and deployment topology across CGP infrastructure
+            and registered products.
+        </p>
+
+        <div id="productRuntimeTopology">
+            Loading product runtime topology...
+        </div>
+    </div>
+
     <h2>Process Control</h2>
     <p>
         Controlled runtime operations for CGP services.
@@ -862,6 +875,175 @@ setInterval(loadDashboard, 5000);
 
 /* ===== M062 Operations Control ===== */
 
+
+async function loadProductRuntimeTopology() {
+
+    const target = document.getElementById("productRuntimeTopology");
+
+    if (!target)
+        return;
+
+    try {
+
+        const [productResponse, processResponse] = await Promise.all([
+            fetch("/api/products", { cache: "no-store" }),
+            fetch("/api/processes", { cache: "no-store" })
+        ]);
+
+        if (!productResponse.ok)
+            throw new Error(`Products API ${productResponse.status}`);
+
+        if (!processResponse.ok)
+            throw new Error(`Processes API ${processResponse.status}`);
+
+        const productData = await productResponse.json();
+        const processData = await processResponse.json();
+
+        const products = productData.products || [];
+        const processes = processData.processes || [];
+
+        const processMap = new Map(
+            processes.map(process => [process.name, process])
+        );
+
+        const ownedProcesses = new Set();
+
+        for (const product of products) {
+            for (const module of product.modules || []) {
+                const processName = module.runtime?.process;
+
+                if (processName)
+                    ownedProcesses.add(processName);
+            }
+        }
+
+        const infrastructure = processes.filter(
+            process => !ownedProcesses.has(process.name)
+        );
+
+        const statusClass = status => {
+            const normalized = String(status || "").toLowerCase();
+
+            if (normalized === "online")
+                return "online";
+
+            if (
+                normalized === "external" ||
+                normalized === "client"
+            )
+                return "started";
+
+            return "stopped";
+        };
+
+        const runtimeRow = (
+            label,
+            runtimeType,
+            processName,
+            status,
+            detail = ""
+        ) => `
+            <div class="process-row">
+                <div>
+                    <strong>${escapeHtml(label)}</strong>
+                    <div class="muted">
+                        ${escapeHtml(detail)}
+                    </div>
+                </div>
+
+                <div>
+                    ${escapeHtml(processName || runtimeType || "—")}
+                </div>
+
+                <div class="${statusClass(status)}">
+                    ${escapeHtml(String(status || "unknown").toUpperCase())}
+                </div>
+            </div>
+        `;
+
+        let html = "";
+
+        html += `
+            <div class="card">
+                <h3>CGP Infrastructure</h3>
+        `;
+
+        if (infrastructure.length) {
+
+            html += infrastructure.map(process =>
+                runtimeRow(
+                    process.name,
+                    "pm2",
+                    process.name,
+                    process.status,
+                    "CGP platform service"
+                )
+            ).join("");
+
+        } else {
+
+            html += `<div class="muted">No infrastructure processes detected.</div>`;
+
+        }
+
+        html += `</div>`;
+
+        for (const product of products) {
+
+            html += `
+                <div class="card">
+                    <h3>${escapeHtml(product.name)}</h3>
+
+                    <div class="muted">
+                        ${escapeHtml(product.type || "product")}
+                        ${product.game ? ` · ${escapeHtml(product.game)}` : ""}
+                    </div>
+            `;
+
+            for (const module of product.modules || []) {
+
+                const runtime = module.runtime || {};
+                const processName = runtime.process || null;
+
+                if (runtime.type === "pm2") {
+
+                    const process = processMap.get(processName);
+
+                    html += runtimeRow(
+                        module.name,
+                        runtime.type,
+                        processName,
+                        process?.status || "offline",
+                        `PM2 runtime · ${processName || "unmapped"}`
+                    );
+
+                } else {
+
+                    html += runtimeRow(
+                        module.name,
+                        runtime.type,
+                        null,
+                        runtime.type || "unknown",
+                        `${runtime.type || "unknown"} runtime`
+                    );
+
+                }
+            }
+
+            html += `</div>`;
+        }
+
+        target.innerHTML = html;
+
+    } catch (error) {
+
+        target.textContent =
+            `Unable to load product runtime topology: ${error.message}`;
+
+    }
+
+}
+
 async function loadOperationsControl() {
     const status = document.getElementById("operationsControlStatus");
     const grid = document.getElementById("operationsControlGrid");
@@ -972,7 +1154,8 @@ async function restartControlledProcess(button) {
         button.textContent = "Restarted";
 
         setTimeout(() => {
-            loadOperationsControl();
+            loadProductRuntimeTopology();
+    loadOperationsControl();
         }, 1200);
 
     } catch (error) {
