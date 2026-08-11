@@ -1,16 +1,30 @@
 const fs = require("fs");
 const path = require("path");
 const os = require("os");
+const Engine = require("../../core/engine");
 
-class AuditEngine {
+class AuditEngine extends Engine {
 
     constructor(){
 
-        this.name="Audit Engine";
-        this.version="0.1.0-alpha";
-        this.status="created";
+        super("Audit Engine", "0.1.0-alpha");
 
         this.root=path.resolve(__dirname,"../../..");
+    }
+
+    dependencies(){
+        return ["storage", "logger", "config"];
+    }
+
+    async initialize(context = {}) {
+        await super.initialize(context);
+        this.storage = context.storage;
+        this.logger = context.platform?.getService?.("logger");
+        this.events = context.events;
+        if (context.platform?.registerService) {
+            context.platform.registerService("audit", this);
+        }
+        return true;
     }
 
     walk(dir,result=[]){
