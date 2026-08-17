@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const os = require("os");
 const Engine = require("../../core/engine");
+const { analyzeJavaScriptFiles } = require("./analyzers/structuralAnalyzer");
 
 class AuditEngine extends Engine {
 
@@ -68,6 +69,26 @@ class AuditEngine extends Engine {
 
         const files=this.walk(this.root);
 
+        const javascriptFiles=files
+            .filter(file=>file.endsWith(".js"))
+            .map(file=>path.join(this.root,file));
+
+        const structuralFindings=analyzeJavaScriptFiles(javascriptFiles);
+
+        const structural={
+            scannedJavaScript:javascriptFiles.length,
+            findings:structuralFindings,
+            summary:{
+                total:structuralFindings.length,
+                errors:structuralFindings.filter(
+                    finding=>finding.severity==="error"
+                ).length,
+                warnings:structuralFindings.filter(
+                    finding=>finding.severity==="warning"
+                ).length
+            }
+        };
+
         const report = {
 
             generatedAt:new Date().toISOString(),
@@ -89,6 +110,8 @@ class AuditEngine extends Engine {
                 status:e.status
 
             })),
+
+            structural,
 
             statistics:{
 
