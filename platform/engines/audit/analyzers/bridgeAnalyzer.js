@@ -82,21 +82,106 @@ function analyzeEngineBridges(root) {
         }
 
         let target = null;
+        let dynamic = false;
+
+        function evaluatePathJoin(node) {
+
+            if (
+                node?.type !== "CallExpression" ||
+                node.callee?.type !== "MemberExpression" ||
+                node.callee.property?.name !== "join"
+            ) {
+                return null;
+            }
+
+            const object = node.callee.object;
+
+            const pathRequire =
+                object?.type === "CallExpression" &&
+                object.callee?.type === "Identifier" &&
+                object.callee.name === "require" &&
+                object.arguments?.length === 1 &&
+                object.arguments[0]?.type === "Literal" &&
+                object.arguments[0].value === "path";
+
+            if (!pathRequire)
+                return null;
+
+            const parts = [];
+
+            for (const argument of node.arguments) {
+
+                if (
+                    argument?.type === "Literal" &&
+                    typeof argument.value === "string"
+                ) {
+                    parts.push(argument.value);
+                    continue;
+                }
+
+                const isHome =
+                    argument?.type === "MemberExpression" &&
+                    argument.property?.name === "HOME" &&
+                    argument.object?.type === "MemberExpression" &&
+                    argument.object.property?.name === "env" &&
+                    argument.object.object?.type === "Identifier" &&
+                    argument.object.object.name === "process";
+
+                if (isHome && process.env.HOME) {
+                    parts.push(process.env.HOME);
+                    continue;
+                }
+
+                return null;
+            }
+
+            const resolved = path.join(...parts);
+
+            if (
+                !resolved.includes(
+                    path.join(
+                        "apps",
+                        "RainbowSixCubaBot"
+                    )
+                )
+            ) {
+                return null;
+            }
+
+            return resolved;
+        }
 
         walk.simple(ast, {
             CallExpression(node) {
+
                 if (
-                    target === null &&
-                    node.callee?.type === "Identifier" &&
-                    node.callee.name === "require" &&
-                    node.arguments?.length === 1 &&
-                    node.arguments[0]?.type === "Literal" &&
-                    typeof node.arguments[0].value === "string" &&
-                    node.arguments[0].value.includes(
+                    target !== null ||
+                    node.callee?.type !== "Identifier" ||
+                    node.callee.name !== "require" ||
+                    node.arguments?.length !== 1
+                ) {
+                    return;
+                }
+
+                const argument = node.arguments[0];
+
+                if (
+                    argument?.type === "Literal" &&
+                    typeof argument.value === "string" &&
+                    argument.value.includes(
                         "/apps/RainbowSixCubaBot/"
                     )
                 ) {
-                    target = node.arguments[0].value;
+                    target = argument.value;
+                    return;
+                }
+
+                const dynamicTarget =
+                    evaluatePathJoin(argument);
+
+                if (dynamicTarget) {
+                    target = dynamicTarget;
+                    dynamic = true;
                 }
             }
         });
@@ -110,6 +195,7 @@ function analyzeEngineBridges(root) {
         const bridge = {
             entrypoint: relativeEntrypoint,
             target,
+            dynamic,
             absolute: path.isAbsolute(target),
             targetExists: false,
             targetResolvable: false
@@ -143,7 +229,7 @@ function analyzeEngineBridges(root) {
             );
         }
 
-        if (bridge.absolute) {
+        if (bridge.absolute && !bridge.dynamic) {
             findings.push(
                 finding(
                     "absolute-engine-bridge",
