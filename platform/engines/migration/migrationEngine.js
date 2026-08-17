@@ -1,13 +1,12 @@
 const fs = require("fs");
 const path = require("path");
+const Engine = require("../../core/engine");
 
-class MigrationEngine {
+class MigrationEngine extends Engine {
 
     constructor(){
 
-        this.name="Migration Engine";
-        this.version="0.1.0-alpha";
-        this.status="created";
+        super("Migration Engine", "0.1.0-alpha");
 
         this.root=path.join(process.env.HOME,"CGP");
     }
