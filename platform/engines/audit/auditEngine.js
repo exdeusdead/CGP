@@ -4,6 +4,7 @@ const os = require("os");
 const Engine = require("../../core/engine");
 const { analyzeJavaScriptFiles } = require("./analyzers/structuralAnalyzer");
 const { analyzeEngineContracts } = require("./analyzers/engineContractAnalyzer");
+const { analyzeEngineDependencies } = require("./analyzers/dependencyAnalyzer");
 
 class AuditEngine extends Engine {
 
@@ -94,6 +95,8 @@ class AuditEngine extends Engine {
             path.join(this.root,"platform","engines")
         );
 
+        const dependencies=analyzeEngineDependencies(registry);
+
         const report = {
 
             generatedAt:new Date().toISOString(),
@@ -118,6 +121,7 @@ class AuditEngine extends Engine {
 
             structural,
             engineContracts,
+            dependencies,
 
             statistics:{
 
