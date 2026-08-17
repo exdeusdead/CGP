@@ -15,8 +15,6 @@ function writeReleaseManifest(platformStatus) {
     version: platformStatus.version,
       status: platformStatus.releaseStatus || platformStatus.status || null,
       currentMilestone: platformStatus.currentMilestone || null,
-      status: platformStatus.releaseStatus || platformStatus.status || null,
-      currentMilestone: platformStatus.currentMilestone || null,
     generatedAt: new Date().toISOString(),
     engines: platformStatus.engines.map(engine => ({
       name: engine.name,
