@@ -5,6 +5,7 @@ const Engine = require("../../core/engine");
 const { analyzeJavaScriptFiles } = require("./analyzers/structuralAnalyzer");
 const { analyzeEngineContracts } = require("./analyzers/engineContractAnalyzer");
 const { analyzeEngineDependencies } = require("./analyzers/dependencyAnalyzer");
+const { analyzeEngineBridges } = require("./analyzers/bridgeAnalyzer");
 
 class AuditEngine extends Engine {
 
@@ -97,6 +98,8 @@ class AuditEngine extends Engine {
 
         const dependencies=analyzeEngineDependencies(registry);
 
+        const bridges=analyzeEngineBridges(this.root);
+
         const report = {
 
             generatedAt:new Date().toISOString(),
@@ -122,6 +125,7 @@ class AuditEngine extends Engine {
             structural,
             engineContracts,
             dependencies,
+            bridges,
 
             statistics:{
 
