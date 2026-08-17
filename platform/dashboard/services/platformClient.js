@@ -4,9 +4,9 @@ class PlatformClient {
         this.baseUrl = baseUrl;
     }
 
-    async request(path) {
+    async request(path, options = {}) {
 
-        const response = await fetch(`${this.baseUrl}${path}`);
+        const response = await fetch(`${this.baseUrl}${path}`, options);
 
         if (!response.ok)
             throw new Error(`Platform API ${response.status}`);
@@ -42,6 +42,19 @@ class PlatformClient {
     getServices() {
         return this.request("/services");
     }
+
+    getAuditLatest() {
+        return this.request("/audit/latest");
+    }
+
+    getAuditHistory(limit = 10) {
+        return this.request(`/audit/history?limit=${encodeURIComponent(limit)}`);
+    }
+
+    runAudit() {
+        return this.request("/audit/run", { method: "POST" });
+    }
+
 
     getProducts() {
         return this.request("/products");

@@ -30,6 +30,25 @@ router.get("/api/health", proxy("getHealth"));
 router.get("/api/engines", proxy("getEngines"));
 router.get("/api/services", proxy("getServices"));
 router.get("/api/products", proxy("getProducts"));
+router.get("/api/audit/latest", proxy("getAuditLatest"));
+router.get("/api/audit/history", async (req, res) => {
+    try {
+        const data = await platform.getAuditHistory(req.query.limit || 10);
+        res.json(data);
+    } catch (error) {
+        res.status(502).json({ ok: false, error: error.message });
+    }
+});
+router.post("/api/audit/run", async (req, res) => {
+    try {
+        const data = await platform.runAudit();
+        res.json(data);
+    } catch (error) {
+        res.status(502).json({ ok: false, error: error.message });
+    }
+});
+
+
 
 router.get("/api/processes", async (req, res) => {
     try {
