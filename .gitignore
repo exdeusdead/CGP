@@ -9,6 +9,8 @@ node_modules/
 
 # Runtime / generated data
 platform/data/auth/tokens/
+platform/data/accounts/
+platform/data/gamingProfiles/
 platform/data/identity/users/
 platform/data/identity/linkedAccounts/
 platform/data/membership/

@@ -1,14 +1,112 @@
-const crypto = require("crypto");
+﻿const crypto = require("crypto");
 const express = require("express");
 const authService = require("../../services/auth/auth.service");
 const identityService = require("../../services/identity/identity.service");
 const membershipService = require("../../services/membership/membership.service");
 const accountLinking = require("../../services/accountLinking/accountLinking.service");
+const accountProvisioning = require("../../services/accountProvisioning/accountProvisioning.service");
 const { requireAuth } = require("../middleware/auth.middleware");
 const { getAuthConfig } = require("../../config/auth.config");
 
 const router = express.Router();
 
+/*
+ * Native CGP registration.
+ *
+ * Creates:
+ * CGP Account -> Gaming Profile -> CGP Address -> Session
+ */
+router.post("/register", (req, res) => {
+  try {
+    const { username, password, displayName } = req.body || {};
+
+    if (!username || !password) {
+      return res.status(400).json({
+        error: "MISSING_CREDENTIALS",
+        message: "Username and password are required."
+      });
+    }
+
+    const identity = accountProvisioning.createCGPAccount({
+      username,
+      password,
+      displayName
+    });
+
+    const session = authService.createAccountToken(
+      identity.account.accountId,
+      ["user"]
+    );
+
+    return res.status(201).json({
+      type: "cgp",
+      account: identity.account,
+      profile: identity.profile,
+      token: session.token,
+      session
+    });
+  } catch (error) {
+    const knownConflict =
+      error.code === "ACCOUNT_EXISTS" ||
+      error.code === "USERNAME_EXISTS" ||
+      error.code === "PROFILE_EXISTS";
+
+    return res.status(knownConflict ? 409 : 400).json({
+      error: error.code || "ACCOUNT_CREATION_FAILED",
+      message: error.message
+    });
+  }
+});
+
+/*
+ * Native CGP login.
+ */
+router.post("/login", (req, res) => {
+  try {
+    const { username, password } = req.body || {};
+
+    if (!username || !password) {
+      return res.status(400).json({
+        error: "MISSING_CREDENTIALS",
+        message: "Username and password are required."
+      });
+    }
+
+    const identity = accountProvisioning.authenticateCGPAccount(
+      username,
+      password
+    );
+
+    if (!identity) {
+      return res.status(401).json({
+        error: "INVALID_CREDENTIALS",
+        message: "Invalid CGP username or password."
+      });
+    }
+
+    const session = authService.createAccountToken(
+      identity.account.accountId,
+      ["user"]
+    );
+
+    return res.json({
+      type: "cgp",
+      account: identity.account,
+      profile: identity.profile,
+      token: session.token,
+      session
+    });
+  } catch (error) {
+    return res.status(500).json({
+      error: "LOGIN_FAILED",
+      message: error.message
+    });
+  }
+});
+
+/*
+ * Existing legacy token creation.
+ */
 router.post("/token", (req, res) => {
   const { userId, scope } = req.body || {};
 
@@ -45,9 +143,21 @@ router.get("/verify", (req, res) => {
   });
 });
 
-
+/*
+ * Unified current-session endpoint.
+ */
 router.get("/me", requireAuth, (req, res) => {
-  res.json({
+  if (req.cgp.account) {
+    return res.json({
+      type: "cgp",
+      account: req.cgp.account,
+      profile: req.cgp.profile,
+      session: req.cgp.session
+    });
+  }
+
+  return res.json({
+    type: "legacy",
     user: req.cgp.user,
     session: req.cgp.session,
     memberships: membershipService.listUserMemberships(req.cgp.user.id),
@@ -55,7 +165,17 @@ router.get("/me", requireAuth, (req, res) => {
   });
 });
 
+router.post("/logout", requireAuth, (req, res) => {
+  const revoked = authService.revokeToken(req.cgp.session.token);
 
+  return res.json({
+    success: revoked
+  });
+});
+
+/*
+ * Discord remains an optional external identity provider.
+ */
 router.get("/discord/login", (req, res) => {
   const config = getAuthConfig().discord;
 
@@ -88,8 +208,6 @@ router.get("/discord/login", (req, res) => {
 
   return res.redirect(url);
 });
-
-
 
 router.get("/discord/callback", async (req, res) => {
   try {
@@ -231,6 +349,5 @@ router.get("/discord/callback", async (req, res) => {
     });
   }
 });
-
 
 module.exports = router;

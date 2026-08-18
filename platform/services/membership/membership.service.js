@@ -1,10 +1,16 @@
 const fs = require("fs");
 const path = require("path");
 
-const MEMBERSHIP_ROOT = path.join(
-  process.env.HOME,
-  "CGP",
-  "platform",
+/*
+ * CGP membership storage.
+ *
+ * Storage is resolved relative to the platform so the same
+ * service works on Windows development and Linux production.
+ */
+const MEMBERSHIP_ROOT = path.resolve(
+  __dirname,
+  "..",
+  "..",
   "data",
   "membership",
   "products"
@@ -17,73 +23,134 @@ function productDir(productId) {
 }
 
 function membershipFile(productId, userId) {
-  return path.join(productDir(productId), `${userId}.json`);
+  return path.join(
+    productDir(productId),
+    `${userId}.json`
+  );
 }
 
 function addMembership(userId, productId, data = {}) {
-  if (!userId) throw new Error("userId is required");
-  if (!productId) throw new Error("productId is required");
+  if (!userId) {
+    throw new Error("userId is required");
+  }
 
-  fs.mkdirSync(productDir(productId), { recursive: true });
+  if (!productId) {
+    throw new Error("productId is required");
+  }
 
-  const existing = getMembership(userId, productId);
+  fs.mkdirSync(
+    productDir(productId),
+    { recursive: true }
+  );
+
+  const existing = getMembership(
+    userId,
+    productId
+  );
 
   const membership = {
     userId,
     productId,
-    status: data.status || existing?.status || "active",
-    roles: data.roles || existing?.roles || [],
-    permissions: data.permissions || existing?.permissions || [],
-    joinedAt: existing?.joinedAt || new Date().toISOString(),
-    updatedAt: new Date().toISOString()
+    status:
+      data.status ||
+      existing?.status ||
+      "active",
+    roles:
+      data.roles ||
+      existing?.roles ||
+      [],
+    permissions:
+      data.permissions ||
+      existing?.permissions ||
+      [],
+    joinedAt:
+      existing?.joinedAt ||
+      new Date().toISOString(),
+    updatedAt:
+      new Date().toISOString()
   };
 
   fs.writeFileSync(
-    membershipFile(productId, userId),
-    JSON.stringify(membership, null, 2)
+    membershipFile(
+      productId,
+      userId
+    ),
+    JSON.stringify(
+      membership,
+      null,
+      2
+    ),
+    "utf8"
   );
 
   return membership;
 }
 
 function getMembership(userId, productId) {
-  const file = membershipFile(productId, userId);
+  const file = membershipFile(
+    productId,
+    userId
+  );
 
-  if (!fs.existsSync(file)) return null;
+  if (!fs.existsSync(file)) {
+    return null;
+  }
 
-  return JSON.parse(fs.readFileSync(file, "utf8"));
+  return JSON.parse(
+    fs.readFileSync(
+      file,
+      "utf8"
+    )
+  );
 }
 
 function listProductMembers(productId) {
   const dir = productDir(productId);
 
-  if (!fs.existsSync(dir)) return [];
+  if (!fs.existsSync(dir)) {
+    return [];
+  }
 
-  return fs.readdirSync(dir)
-    .filter(file => file.endsWith(".json"))
-    .map(file => JSON.parse(fs.readFileSync(path.join(dir, file), "utf8")));
+  return fs
+    .readdirSync(dir)
+    .filter((file) =>
+      file.endsWith(".json")
+    )
+    .map((file) =>
+      JSON.parse(
+        fs.readFileSync(
+          path.join(dir, file),
+          "utf8"
+        )
+      )
+    );
 }
 
 function listUserMemberships(userId) {
-  if (!fs.existsSync(MEMBERSHIP_ROOT)) return [];
+  if (!fs.existsSync(MEMBERSHIP_ROOT)) {
+    return [];
+  }
 
-  return fs.readdirSync(MEMBERSHIP_ROOT)
-    .flatMap(productId => {
-      const membership = getMembership(userId, productId);
-      return membership ? [membership] : [];
+  return fs
+    .readdirSync(MEMBERSHIP_ROOT)
+    .flatMap((productId) => {
+      const membership =
+        getMembership(
+          userId,
+          productId
+        );
+
+      return membership
+        ? [membership]
+        : [];
     });
 }
 
-module.exports = {
-  addMembership,
-  getMembership,
-  listProductMembers,
-  listUserMemberships
-};
-
-
 function canAccessProduct(userId, productId) {
-  const membership = getMembership(userId, productId);
+  const membership = getMembership(
+    userId,
+    productId
+  );
 
   if (!membership) {
     return false;
@@ -92,9 +159,11 @@ function canAccessProduct(userId, productId) {
   return membership.status === "active";
 }
 
-
 function getUserProductRoles(userId, productId) {
-  const membership = getMembership(userId, productId);
+  const membership = getMembership(
+    userId,
+    productId
+  );
 
   if (!membership) {
     return [];
@@ -103,9 +172,11 @@ function getUserProductRoles(userId, productId) {
   return membership.roles || [];
 }
 
-
 function getUserProductPermissions(userId, productId) {
-  const membership = getMembership(userId, productId);
+  const membership = getMembership(
+    userId,
+    productId
+  );
 
   if (!membership) {
     return [];
@@ -114,7 +185,13 @@ function getUserProductPermissions(userId, productId) {
   return membership.permissions || [];
 }
 
-
-module.exports.canAccessProduct = canAccessProduct;
-module.exports.getUserProductRoles = getUserProductRoles;
-module.exports.getUserProductPermissions = getUserProductPermissions;
+module.exports = {
+  addMembership,
+  getMembership,
+  listProductMembers,
+  listUserMemberships,
+  canAccessProduct,
+  getUserProductRoles,
+  getUserProductPermissions,
+  MEMBERSHIP_ROOT
+};
