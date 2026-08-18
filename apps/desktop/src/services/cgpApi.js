@@ -134,7 +134,6 @@ export async function requestCGP(path, options = {}) {
   try {
     const response = await fetch(getApiUrl(path), {
       ...fetchOptions,
-
       headers: {
         Accept: "application/json",
 
@@ -243,14 +242,6 @@ function determineIntegrationState(
     return "online";
   }
 
-  /*
-   * Protected CGP services are expected to reject
-   * unauthenticated requests.
-   *
-   * A 401 or 403 therefore proves that the route
-   * exists and that its authentication boundary
-   * is responding correctly.
-   */
   if (
     (integration.access === "protected" ||
       integration.access === "authentication") &&
@@ -314,4 +305,129 @@ export async function inspectIntegration(
     checkedAt:
       new Date().toISOString(),
   };
+}
+
+export async function registerCGPAccount({
+  username,
+  password,
+  displayName,
+}) {
+  const result = await requestCGP(
+    "/api/auth/register",
+    {
+      method: "POST",
+      token: null,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username,
+        password,
+        displayName,
+      }),
+    }
+  );
+
+  if (
+    result.ok &&
+    result.data?.token
+  ) {
+    setStoredToken(
+      result.data.token
+    );
+  }
+
+  return result;
+}
+
+export async function loginCGPAccount({
+  username,
+  password,
+}) {
+  const result = await requestCGP(
+    "/api/auth/login",
+    {
+      method: "POST",
+      token: null,
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        username,
+        password,
+      }),
+    }
+  );
+
+  if (
+    result.ok &&
+    result.data?.token
+  ) {
+    setStoredToken(
+      result.data.token
+    );
+  }
+
+  return result;
+}
+
+export async function getCurrentCGPSession() {
+  const token =
+    getStoredToken();
+
+  if (!token) {
+    return {
+      ok: false,
+      status: null,
+      data: null,
+      error: "NO_SESSION",
+    };
+  }
+
+  const result =
+    await requestCGP(
+      "/api/auth/me"
+    );
+
+  if (
+    !result.ok &&
+    (
+      result.status === 401 ||
+      result.status === 403
+    )
+  ) {
+    clearStoredToken();
+  }
+
+  return result;
+}
+
+export async function logoutCGPAccount() {
+  const token =
+    getStoredToken();
+
+  if (!token) {
+    clearStoredToken();
+
+    return {
+      ok: true,
+      status: null,
+      data: {
+        success: true,
+      },
+      error: null,
+    };
+  }
+
+  const result =
+    await requestCGP(
+      "/api/auth/logout",
+      {
+        method: "POST",
+      }
+    );
+
+  clearStoredToken();
+
+  return result;
 }
